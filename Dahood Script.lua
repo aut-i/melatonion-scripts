@@ -97,24 +97,5 @@ local function on_paint()
     end
 end
 
-local function stop()
-    -- Clear the UI elements
-    for _, checkbox in pairs(elements) do
-        ui.set(checkbox, false)  -- Disable all checkboxes
-    end
-
-    g_vehicles = {}
-    g_landmarks = {}
-    
-    -- Unregister the callbacks
-    cheat.set_callback("update", nil)
-    cheat.set_callback("paint", nil)
-end
-
 cheat.set_callback("update", on_update)
 cheat.set_callback("paint", on_paint)
-
--- Expose the stop function to be callable from outside
-return {
-    stop = stop
-}
