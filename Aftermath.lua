@@ -1,10 +1,21 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
+if not workspace_folder then return end
+
 local world_assets = workspace_folder:find_first_child("world_assets")
+if not world_assets then return end
+
 local static_objects = world_assets:find_first_child("StaticObjects")
+if not static_objects then return end
+
 local misc = static_objects:find_first_child("Misc")
+if not misc then return end
+
 local game_assets = workspace_folder:find_first_child("game_assets")
+if not game_assets then return end
+
 local npcs = game_assets:find_first_child("NPCs")
+if not npcs then return end
 
 local elements = {
     ["Zombies/NPCs"] = ui.new_checkbox("Scripts", "Elements", "Zombies/NPCs"),
@@ -17,7 +28,6 @@ local elements = {
     ["Spawnables Distance"] = ui.new_slider_int("Scripts", "Elements", "Spawnables Distance", 0, 1200, 300),
     ["Spawnables Types"] = ui.new_multiselect("Scripts", "Elements", "Spawnables Types", {"Weapon", "Bandage", "Antibiotics", "Ammo"}),
 }
-
 
 local g_zombies = {}
 local g_spawnables = {}
@@ -32,12 +42,10 @@ local function contains(items, thing)
 end
 
 local function on_update()
-    if (ui.get(elements["Zombies/NPCs"])) then
-
+    if ui.get(elements["Zombies/NPCs"]) then
         g_zombies = {}
         for _, zombie in pairs(npcs:get_children()) do
             local main = zombie:find_first_child("HumanoidRootPart")
-            
             if main then
                 g_zombies[#g_zombies + 1] = {
                     name = "Zombie",
@@ -47,7 +55,7 @@ local function on_update()
         end
     end
 
-    if (ui.get(elements["Spawnables"])) then
+    if ui.get(elements["Spawnables"]) then
         g_spawnables = {}
         local selected_types = ui.get(elements["Spawnables Types"])
 
@@ -66,13 +74,10 @@ local function on_update()
             if contains(selected_types, select_name) then
                 local main = nil
                 for _, container in pairs(spawnable:get_children()) do
-                    local container_class_name =  container:get_class_name()
-                    if container_class_name == "Part" then
+                    local container_class_name = container:get_class_name()
+                    if container_class_name == "Part" or container_class_name == "MeshPart" then
                         main = container
-                    end
-
-                    if not main and container_class_name == "MeshPart" then
-                        main = container
+                        break
                     end
                 end
 
@@ -91,49 +96,50 @@ end
 
 local function on_paint()
     local local_player = entity.get_local_player()
+    if not local_player then return end
+    
     local local_position = vector(local_player:get_position())
-    if (ui.get(elements["Zombies/NPCs"])) then
+    if ui.get(elements["Zombies/NPCs"]) then
         for _, zombie in pairs(g_zombies) do
-            
             local distance = local_position:dist_to(zombie.pos)
             distance = math.floor(distance + 0.5)
     
-            local zombie_dist_slider = (ui.get(elements["Zombies/NPCs Distance"]))
+            local zombie_dist_slider = ui.get(elements["Zombies/NPCs Distance"])
             if zombie_dist_slider < distance then goto continue end        
 
             local screen_pos = vector(utility.world_to_screen(zombie.pos:unpack()))
-            if (screen_pos:is_zero()) then goto continue end
+            if screen_pos:is_zero() then goto continue end
     
             local clr = ui.get(elements["Zombies/NPCs Color"])
             local w, h = render.measure_text(0, false, zombie.name)
     
             render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, zombie.name)
-            if (ui.get(elements["Zombies/NPCs Distance ESP"])) then
+            if ui.get(elements["Zombies/NPCs Distance ESP"]) then
                 local w1, h1 = render.measure_text(0, false, distance)
-                render.text(screen_pos.x - w1/2, screen_pos.y - h1/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance).. "M")
+                render.text(screen_pos.x - w1/2, screen_pos.y - h1/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
             end
             ::continue::
         end
     end
-    if (ui.get(elements["Spawnables"])) then
+    
+    if ui.get(elements["Spawnables"]) then
         for _, spawnable in pairs(g_spawnables) do
-            
             local distance = local_position:dist_to(spawnable.pos)
             distance = math.floor(distance + 0.5)
     
-            local spawnables_dist_slider = (ui.get(elements["Spawnables Distance"]))
+            local spawnables_dist_slider = ui.get(elements["Spawnables Distance"])
             if spawnables_dist_slider < distance then goto continue end        
 
             local screen_pos = vector(utility.world_to_screen(spawnable.pos:unpack()))
-            if (screen_pos:is_zero()) then goto continue end
+            if screen_pos:is_zero() then goto continue end
     
             local clr = ui.get(elements["Spawnables Color"])
             local w, h = render.measure_text(0, false, spawnable.name)
     
             render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, spawnable.name)
-            if (ui.get(elements["Spawnables Distance ESP"])) then
+            if ui.get(elements["Spawnables Distance ESP"]) then
                 local w2, h2 = render.measure_text(0, false, distance)
-                render.text(screen_pos.x - w2/2, screen_pos.y - h2/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance).. "M")
+                render.text(screen_pos.x - w2/2, screen_pos.y - h2/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
             end
             ::continue::
         end
