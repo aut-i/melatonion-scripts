@@ -1,6 +1,6 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
-local military = workspace_folder:find_first_child("Military")
+local military = workspace_folder and workspace_folder:find_first_child("Military")
 local window_width, window_height = cheat.get_window_size()
 
 local elements = {
@@ -42,46 +42,51 @@ local g_plants = {}
 local g_soldiers = {}
 
 local function on_update()
-    if (ui.get(elements["Ore ESP"])) then
-        local nodes_folder = workspace_folder:find_first_child("Nodes")
-        g_nodes = {}
-        for _, node_folder in pairs(nodes_folder:get_children()) do
-            local main = node_folder:find_first_child("Main")
-            if main then
-                g_nodes[#g_nodes + 1] = {
-                    name = node_folder:get_name(),
-                    pos = vector(main:get_position())
-                }
+    if ui.get(elements["Ore ESP"]) then
+        local nodes_folder = workspace_folder and workspace_folder:find_first_child("Nodes")
+        if nodes_folder then
+            g_nodes = {}
+            for _, node_folder in pairs(nodes_folder:get_children()) do
+                local main = node_folder:find_first_child("Main")
+                if main then
+                    g_nodes[#g_nodes + 1] = {
+                        name = node_folder:get_name(),
+                        pos = vector(main:get_position())
+                    }
+                end
             end
         end
     end
 
-    if (ui.get(elements["Soldier ESP"])) then
+    if ui.get(elements["Soldier ESP"]) and military then
         g_soldiers = {}
         for _, bases in pairs(military:get_children()) do
             for _, soldier_folder in pairs(bases:get_children()) do
-                if (soldier_folder:get_name() ~= "Soldier") then goto continue end
-                local main = soldier_folder:find_first_child("HumanoidRootPart")
-                if (not main) then goto continue end
-                g_soldiers[#g_soldiers + 1] = {
-                    name = "Soldier",
-                    pos = vector(main:get_position())
-                }
-                ::continue::
+                if soldier_folder:get_name() == "Soldier" then
+                    local main = soldier_folder:find_first_child("HumanoidRootPart")
+                    if main then
+                        g_soldiers[#g_soldiers + 1] = {
+                            name = "Soldier",
+                            pos = vector(main:get_position())
+                        }
+                    end
+                end
             end
         end
     end
 
-    if (ui.get(elements["Plants"])) then
-        local plants_folder = workspace_folder:find_first_child("Plants")
-        g_plants = {}
-        for _, plant_folder in pairs(plants_folder:get_children()) do
-            local main = plant_folder:find_first_child("Main")
-            if main then
-                g_plants[#g_plants + 1] = {
-                    name = plant_folder:get_name(),
-                    pos = vector(main:get_position())
-                }
+    if ui.get(elements["Plants"]) then
+        local plants_folder = workspace_folder and workspace_folder:find_first_child("Plants")
+        if plants_folder then
+            g_plants = {}
+            for _, plant_folder in pairs(plants_folder:get_children()) do
+                local main = plant_folder:find_first_child("Main")
+                if main then
+                    g_plants[#g_plants + 1] = {
+                        name = plant_folder:get_name(),
+                        pos = vector(main:get_position())
+                    }
+                end
             end
         end
     end
@@ -104,35 +109,33 @@ local function on_paint()
     local local_player = entity.get_local_player()
     local local_position = vector(local_player:get_position())
 
-    if (ui.get(elements["Soldier ESP"])) then
+    if ui.get(elements["Soldier ESP"]) then
         for _, soldier in pairs(g_soldiers) do
-
             local distance = local_position:dist_to(soldier.pos)
             distance = math.floor(distance + 0.5)
-    
-            local soldier_dist_slider = (ui.get(elements["Soldier Distance"]))
-            if soldier_dist_slider < distance then goto continue end    
+
+            local soldier_dist_slider = ui.get(elements["Soldier Distance"])
+            if soldier_dist_slider < distance then goto continue end
 
             local screen_pos = vector(utility.world_to_screen(soldier.pos:unpack()))
-            if (screen_pos:is_zero()) then goto continue end
-    
+            if screen_pos:is_zero() then goto continue end
+
             local clr = ui.get(elements["Soldier Color"])
             local w, h = render.measure_text(0, false, soldier.name)
 
-
             render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, soldier.name)
-            if (ui.get(elements["Soldier Distance ESP"])) then
-            render.text(screen_pos.x - w/2, screen_pos.y - h/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance).. "M")
+            if ui.get(elements["Soldier Distance ESP"]) then
+                render.text(screen_pos.x - w / 2, screen_pos.y - h / 2 + 7, clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
             end
 
-            if (ui.get(elements["Soldier Tracers"])) then
-                render.line(window_width/2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
-            end 
+            if ui.get(elements["Soldier Tracers"]) then
+                render.line(window_width / 2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
+            end
             ::continue::
         end
     end
 
-    if (ui.get(elements["Ore ESP"])) then
+    if ui.get(elements["Ore ESP"]) then
         local ore_types = {"Stone", "Metal", "Phosphate"}
         for _, ore_type in ipairs(ore_types) do
             if ui.get(elements[ore_type]) then
@@ -154,10 +157,10 @@ local function on_paint()
 
                 for _, node in pairs(items_to_draw) do
                     local clean_name = node.name:match("([^_]+)")
-                    if (not ui.get(elements[clean_name])) then goto continue end
+                    if not ui.get(elements[clean_name]) then goto continue end
 
                     local screen_pos = vector(utility.world_to_screen(node.pos:unpack()))
-                    if (screen_pos:is_zero()) then goto continue end
+                    if screen_pos:is_zero() then goto continue end
 
                     local clr = ui.get(elements[clean_name .. " Color"])
                     local w, h = render.measure_text(0, false, clean_name)
@@ -166,20 +169,19 @@ local function on_paint()
                     distance = math.floor(distance + 0.5)
 
                     render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, clean_name)
-                    if (ui.get(elements["Ore Distance ESP"])) then
-                        render.text(screen_pos.x - w/2, screen_pos.y - h/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
+                    if ui.get(elements["Ore Distance ESP"]) then
+                        render.text(screen_pos.x - w / 2, screen_pos.y - h / 2 + 7, clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
                     end
-                    if (ui.get(elements["Ore Tracers"])) then
-                        render.line(window_width/2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
-                    end 
-
+                    if ui.get(elements["Ore Tracers"]) then
+                        render.line(window_width / 2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
+                    end
                     ::continue::
                 end
             end
         end
     end
 
-    if (ui.get(elements["Plants"])) then
+    if ui.get(elements["Plants"]) then
         local plant_types = {"Wool", "Raspberry", "Corn", "Tomato", "Blueberry", "Lemon"}
         for _, plant_type in ipairs(plant_types) do
             if ui.get(elements[plant_type]) then
@@ -200,30 +202,29 @@ local function on_paint()
                 end
 
                 for _, plant in pairs(items_to_draw) do
-
                     local distance = local_position:dist_to(plant.pos)
                     distance = math.floor(distance + 0.5)
 
-                    local plant_slider_dist = (ui.get(elements["Plants Distance"]))
-                    if plant_slider_dist < distance then goto continue end    
+                    local plant_slider_dist = ui.get(elements["Plants Distance"])
+                    if plant_slider_dist < distance then goto continue end
 
                     local clean_name = plant.name:match("([^_]+) ")
                     if not ui.get(elements[clean_name]) then goto continue end
 
                     local screen_pos = vector(utility.world_to_screen(plant.pos:unpack()))
-                    if (screen_pos:is_zero()) then goto continue end
+                    if screen_pos:is_zero() then goto continue end
 
                     local clr = ui.get(elements[clean_name .. " Color"])
                     local w, h = render.measure_text(0, false, clean_name)
 
                     render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, clean_name)
-                    if (ui.get(elements["Plants Distance ESP"])) then
-                        render.text(screen_pos.x - w/2, screen_pos.y - h/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
+                    if ui.get(elements["Plants Distance ESP"]) then
+                        render.text(screen_pos.x - w / 2, screen_pos.y - h / 2 + 7, clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
                     end
 
-                    if (ui.get(elements["Plants Tracers"])) then
-                        render.line(window_width/2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
-                    end 
+                    if ui.get(elements["Plants Tracers"]) then
+                        render.line(window_width / 2, 0, screen_pos.x, screen_pos.y, clr[1], clr[2], clr[3], clr[4], 1)
+                    end
                     ::continue::
                 end
             end
