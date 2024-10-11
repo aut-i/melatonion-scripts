@@ -1,21 +1,10 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
-if not workspace_folder then return end
-
 local world_assets = workspace_folder:find_first_child("world_assets")
-if not world_assets then return end
-
 local static_objects = world_assets:find_first_child("StaticObjects")
-if not static_objects then return end
-
 local misc = static_objects:find_first_child("Misc")
-if not misc then return end
-
 local game_assets = workspace_folder:find_first_child("game_assets")
-if not game_assets then return end
-
 local npcs = game_assets:find_first_child("NPCs")
-if not npcs then return end
 
 local elements = {
     ["Zombies/NPCs"] = ui.new_checkbox("Scripts", "Elements", "Zombies/NPCs"),

@@ -1,6 +1,5 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
-if not workspace_folder then return end
 
 local window_width, window_height = cheat.get_window_size()
 

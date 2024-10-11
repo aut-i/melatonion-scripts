@@ -1,7 +1,7 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
-local npcs = workspace_folder and workspace_folder:find_first_child("NPCs")
-local hostiles = npcs and npcs:find_first_child("Hostile")
+local npcs = workspace_folder:find_first_child("NPCs")
+local hostiles = npcs:find_first_child("Hostile")
 
 local elements = {
     ["NPCs"] = ui.new_checkbox("Scripts", "Elements", "NPCs"),

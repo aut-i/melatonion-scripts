@@ -1,6 +1,6 @@
 local game = game.get_data_model()
 local workspace_folder = game:find_first_child_of_class("Workspace")
-local military = workspace_folder and workspace_folder:find_first_child("Military")
+local military = workspace_folder:find_first_child("Military")
 local window_width, window_height = cheat.get_window_size()
 
 local elements = {
