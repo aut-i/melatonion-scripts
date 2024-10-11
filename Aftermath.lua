@@ -22,6 +22,10 @@ local elements = {
     ["Zombies/NPCs Color"] = ui.new_colorpicker("Scripts", "Elements", "Zombies/NPCs Color", 255, 0, 255, 255, true),
     ["Zombies/NPCs Distance ESP"] = ui.new_checkbox("Scripts", "Elements", "Zombies/NPCs Distance ESP"),
     ["Zombies/NPCs Distance"] = ui.new_slider_int("Scripts", "Elements", "Zombies/NPCs Distance", 0, 1200, 300),
+    ["Vehicles"] = ui.new_checkbox("Scripts", "Elements", "Vehicles"),
+    ["Vehicles Color"] = ui.new_colorpicker("Scripts", "Elements", "Vehicles Color", 255, 0, 255, 255, true),
+    ["Vehicles Distance ESP"] = ui.new_checkbox("Scripts", "Elements", "Vehicles Distance ESP"),
+    ["Vehicles Distance"] = ui.new_slider_int("Scripts", "Elements", "Vehicles Distance", 0, 2500, 300),
     ["Spawnables"] = ui.new_checkbox("Scripts", "Elements", "Spawnables (Performance Intensive)"),
     ["Spawnables Color"] = ui.new_colorpicker("Scripts", "Elements", "Spawnables Color", 255, 0, 255, 255, true),
     ["Spawnables Distance ESP"] = ui.new_checkbox("Scripts", "Elements", "Spawnables Distance ESP"),
@@ -31,6 +35,7 @@ local elements = {
 
 local g_zombies = {}
 local g_spawnables = {}
+local g_vehicles = {}
 
 local function contains(items, thing)
     for _, v in pairs(items) do
@@ -51,6 +56,24 @@ local function on_update()
                     name = "Zombie",
                     pos = vector(main:get_position())
                 }
+            end
+        end
+    end
+
+    if ui.get(elements["Vehicles"]) then
+        g_vehicles = {}
+        for _, vehicle in pairs(workspace_folder:get_children()) do
+
+            local vehicle_name = vehicle:get_name()
+            if vehicle_name == "WorldModel" then
+                local main = vehicle:find_first_child_of_class("Part")
+
+                if main then
+                    g_vehicles[#g_vehicles + 1] = {
+                        name = "Vehicle",
+                        pos = vector(main:get_position())
+                    }
+                end
             end
         end
     end
@@ -121,6 +144,30 @@ local function on_paint()
             ::continue::
         end
     end
+
+    if ui.get(elements["Vehicles"]) then
+        for _, vehicle in pairs(g_vehicles) do
+            local distance = local_position:dist_to(vehicle.pos)
+            distance = math.floor(distance + 0.5)
+    
+            local zombie_dist_slider = ui.get(elements["Vehicles Distance"])
+            if zombie_dist_slider < distance then goto continue end        
+
+            local screen_pos = vector(utility.world_to_screen(vehicle.pos:unpack()))
+            if screen_pos:is_zero() then goto continue end
+    
+            local clr = ui.get(elements["Vehicles Color"])
+            local w, h = render.measure_text(0, false, vehicle.name)
+    
+            render.text(screen_pos.x - w / 2, screen_pos.y - h / 2, clr[1], clr[2], clr[3], clr[4], 0, false, vehicle.name)
+            if ui.get(elements["Vehicles Distance ESP"]) then
+                local w1, h1 = render.measure_text(0, false, distance)
+                render.text(screen_pos.x - w1/2, screen_pos.y - h1/2 + 7 , clr[1], clr[2], clr[3], clr[4], 0, false, tostring(distance) .. "M")
+            end
+            ::continue::
+        end
+    end
+    
     
     if ui.get(elements["Spawnables"]) then
         for _, spawnable in pairs(g_spawnables) do
